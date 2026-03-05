@@ -1,0 +1,18 @@
+:root {
+  /* Tokenized Easing System */
+  --ease-signature: cubic-bezier(0.22, 1, 0.36, 1); /* Project Default */
+  --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);    /* Subtle Changes */
+  --ease-float: cubic-bezier(0.25, 0.8, 0.25, 1);   /* Hover & Motion */
+}
+
+/* Global Transition Rule */
+* {
+  transition-timing-function: var(--ease-signature);
+}
+
+/* Base performance styles */
+body {
+  overflow-x: hidden;
+  background-color: #000; /* Assuming a dark designer vibe */
+  color: #fff;
+}

@@ -1,14 +1,13 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  // 1. Opt into Nuxt 4 directory structure and performance engine
   future: {
     compatibilityVersion: 4,
   },
 
-  // 2. Set the date for feature snapshotting
+  css: ['~/assets/css/main.css'],
+
   compatibilityDate: '2025-07-15',
 
-  // 3. Enable your selected modules
   modules: [
     '@nuxt/eslint',
     '@nuxt/fonts',
