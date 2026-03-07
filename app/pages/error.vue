@@ -29,6 +29,8 @@ useSeoMeta({
   justify-content: center;
   padding: 3rem;
   text-align: center;
+  background-color: #000;
+  color: #fff;
 }
 
 .error-page__content {
@@ -44,12 +46,14 @@ useSeoMeta({
   line-height: 1;
   opacity: 0.1;
   letter-spacing: -0.05em;
+  font-family: var(--font-panchang, sans-serif);
 }
 
 .error-page__heading {
   font-size: clamp(1.5rem, 3vw, 2.5rem);
   font-weight: 600;
   margin: 0;
+  font-family: var(--font-panchang, sans-serif);
 }
 
 .error-page__sub {
@@ -69,7 +73,7 @@ useSeoMeta({
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   opacity: 0.7;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s var(--ease-float);
 }
 
 .error-page__link:hover {

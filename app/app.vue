@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, provide, readonly, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const showLoader = ref(true)
 const isAppReady = ref(false)
@@ -19,7 +19,15 @@ function onLoaderDismissed() {
 provide('isAppReady', readonly(isAppReady))
 
 onMounted(() => {
-  if (localStorage.getItem('dv_visited')) {
+  // Check for return visitor — skip loader immediately
+  let hasVisited = false
+  try {
+    hasVisited = localStorage.getItem('dv_visited') === 'true'
+  } catch {
+    // Storage blocked
+  }
+
+  if (hasVisited) {
     showLoader.value = false
     isAppReady.value = true
   }

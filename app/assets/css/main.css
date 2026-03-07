@@ -1,8 +1,8 @@
 :root {
   /* Tokenized Easing System */
-  --ease-signature: cubic-bezier(0.22, 1, 0.36, 1); /* Project Default */
-  --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);    /* Subtle Changes */
-  --ease-float: cubic-bezier(0.25, 0.8, 0.25, 1);   /* Hover & Motion */
+  --ease-signature: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-float: cubic-bezier(0.25, 0.8, 0.25, 1);
 
   /* Font Families */
   --font-panchang: 'Panchang', sans-serif;
@@ -10,12 +10,12 @@
   --font-climate: 'Climate Crisis', system-ui;
 }
 
-/* Global Transition Rule */
+/* Global transition timing — everything inherits signature */
 * {
   transition-timing-function: var(--ease-signature);
 }
 
-/* Base performance styles */
+/* Base canvas */
 html {
   background-color: #000;
 }
@@ -24,9 +24,21 @@ body {
   overflow-x: hidden;
   background-color: transparent;
   color: #fff;
+  font-family: var(--font-satoshi);
 }
 
-/* Scroll lock for intro loader */
+/* Scroll lock — toggled by IntroLoader */
 body.scroll-locked {
   overflow: hidden !important;
+}
+
+/* Reduce motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

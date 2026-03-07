@@ -22,11 +22,16 @@ useSeoMeta({
   description: 'Portfolio of David Veluz, a full-stack developer and creative technologist building purposeful, animated web experiences.',
 })
 
-const setBackgroundColor = inject('setBackgroundColor', null) as
-  | ((r: number, g: number, b: number, duration?: number, blend?: number) => void)
-  | null
+type SetColorFn = (r: number, g: number, b: number, duration?: number, blend?: number) => void
+const setBackgroundColor = inject<SetColorFn | null>('setBackgroundColor', null)
 
-const sectionColors: { selector: string; color: [number, number, number]; duration: number }[] = [
+interface SectionColorMap {
+  selector: string
+  color: [number, number, number]
+  duration: number
+}
+
+const sectionColors: SectionColorMap[] = [
   { selector: '.hero',     color: [0.05, 0.05, 0.08], duration: 1.5 },
   { selector: '.who-am-i', color: [0.08, 0.06, 0.12], duration: 1.2 },
   { selector: '.about-me', color: [0.06, 0.10, 0.10], duration: 1.2 },
@@ -37,6 +42,9 @@ const sectionColors: { selector: string; color: [number, number, number]; durati
 
 onMounted(() => {
   if (!setBackgroundColor) return
+
+  // Respect reduced motion — skip ScrollTrigger color shifts
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   sectionColors.forEach(({ selector, color, duration }) => {
     ScrollTrigger.create({

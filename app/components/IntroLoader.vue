@@ -3,7 +3,6 @@
     v-if="isVisible"
     class="intro-loader"
     :class="{ 'intro-loader--exiting': isExiting }"
-    style="position:fixed;inset:0;z-index:10000;background-color:#C5A55A;"
   >
     <button
       class="intro-loader__trigger"
@@ -11,11 +10,11 @@
       :aria-label="isReady ? 'Click anywhere to enter the site' : 'Loading site...'"
       @click="dismiss"
     >
-      <!-- Side lines -->
-      <div class="intro-loader__line intro-loader__line--left" :class="{ 'intro-loader__line--exit': isExiting }" />
-      <div class="intro-loader__line intro-loader__line--right" :class="{ 'intro-loader__line--exit': isExiting }" />
+      <!-- Side accent lines -->
+      <div class="intro-loader__line intro-loader__line--left" />
+      <div class="intro-loader__line intro-loader__line--right" />
 
-      <!-- 2x2 Grid -->
+      <!-- 2×2 Grid -->
       <div class="intro-loader__grid">
         <!-- Top-left: Name ticker -->
         <div class="intro-loader__cell intro-loader__cell--name">
@@ -33,12 +32,12 @@
         </div>
 
         <!-- Top-right: empty -->
-        <div class="intro-loader__cell intro-loader__cell--empty" />
+        <div class="intro-loader__cell" />
 
         <!-- Bottom-left: empty -->
-        <div class="intro-loader__cell intro-loader__cell--empty" />
+        <div class="intro-loader__cell" />
 
-        <!-- Bottom-right: Progress -->
+        <!-- Bottom-right: Progress counter -->
         <div class="intro-loader__cell intro-loader__cell--progress">
           <div class="intro-loader__progress-wrap">
             <span class="intro-loader__percent">{{ displayProgress }}</span>
@@ -46,8 +45,10 @@
         </div>
       </div>
 
-      <!-- Enter prompt -->
-      <p v-if="isReady" class="intro-loader__prompt">Click anywhere to enter</p>
+      <!-- Click prompt — fades in when ready -->
+      <p v-if="isReady" class="intro-loader__prompt">
+        Click anywhere to enter
+      </p>
     </button>
   </div>
 </template>
@@ -55,9 +56,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const emit = defineEmits<{
-  dismissed: []
-}>()
+const emit = defineEmits<{ dismissed: [] }>()
 
 const nameLetters = ['D', 'A', 'V', 'I', 'D', '\u00A0', 'V', 'E', 'L', 'U', 'Z']
 
@@ -81,28 +80,46 @@ function dismiss() {
 
   isExiting.value = true
 
+  // Exit animation duration matches CSS
   setTimeout(() => {
     document.body.classList.remove('scroll-locked')
     isVisible.value = false
-    localStorage.setItem('dv_visited', 'true')
+
+    try {
+      localStorage.setItem('dv_visited', 'true')
+    } catch {
+      // Storage blocked — no-op
+    }
+
     emit('dismissed')
   }, 900)
 }
 
 onMounted(() => {
-  if (localStorage.getItem('dv_visited')) {
+  // Skip loader on return visits
+  let hasVisited = false
+  try {
+    hasVisited = localStorage.getItem('dv_visited') === 'true'
+  } catch {
+    // Storage blocked — treat as first visit
+  }
+
+  if (hasVisited) {
     isVisible.value = false
     emit('dismissed')
     return
   }
 
+  // Lock scroll during loader
   document.body.classList.add('scroll-locked')
 
+  // Minimum display time — gives the ticker animation time to land
   setTimeout(() => {
     minTimerDone = true
     checkReady()
-  }, 1200)
+  }, 2000)
 
+  // Track page load state
   if (document.readyState === 'complete') {
     loadDone = true
   } else {
@@ -112,6 +129,7 @@ onMounted(() => {
     }, { once: true })
   }
 
+  // Simulated progress counter
   let target = 0
   progressInterval = setInterval(() => {
     if (loadDone) {
@@ -140,6 +158,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* ─── Container ─── */
 .intro-loader {
   position: fixed;
   inset: 0;
@@ -151,14 +170,14 @@ onUnmounted(() => {
 }
 
 .intro-loader--exiting {
-  animation: loaderFadeOut 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: loaderFadeOut 0.9s var(--ease-signature) forwards;
 }
 
 @keyframes loaderFadeOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
+  to { opacity: 0; }
 }
 
+/* ─── Full-screen trigger button ─── */
 .intro-loader__trigger {
   all: unset;
   position: absolute;
@@ -175,7 +194,7 @@ onUnmounted(() => {
   cursor: wait;
 }
 
-/* Grid layout */
+/* ─── Grid ─── */
 .intro-loader__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -202,7 +221,7 @@ onUnmounted(() => {
   padding-top: 1.5rem;
 }
 
-/* Ticker animation — single-slot letter cycling */
+/* ─── Ticker ─── */
 .intro-loader__h1 {
   margin: 0;
   font-size: clamp(3rem, 8vw, 6rem);
@@ -226,49 +245,21 @@ onUnmounted(() => {
   justify-content: center;
   position: absolute;
   inset: 0;
-  animation: tickerCycle 3.3s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation: tickerCycle 3.3s var(--ease-signature) infinite;
   opacity: 0;
-  will-change: transform, opacity;
 }
 
-/*
-  11 letters, total cycle = 3.3s
-  Each letter's active window = 9.09% of the cycle (0.3s)
-  Within that window:
-    0-3%   : slide up from below
-    3-6%   : hold in view
-    6-9.09%: slide out above
-*/
 @keyframes tickerCycle {
-  0% {
-    transform: translateY(110%);
-    opacity: 0;
-  }
-  2% {
-    opacity: 1;
-  }
-  3.5% {
-    transform: translateY(0%);
-    opacity: 1;
-  }
-  5.5% {
-    transform: translateY(0%);
-    opacity: 1;
-  }
-  8% {
-    opacity: 1;
-  }
-  9.09% {
-    transform: translateY(-110%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(-110%);
-    opacity: 0;
-  }
+  0%    { transform: translateY(110%); opacity: 0; }
+  2%    { opacity: 1; }
+  3.5%  { transform: translateY(0%);   opacity: 1; }
+  5.5%  { transform: translateY(0%);   opacity: 1; }
+  8%    { opacity: 1; }
+  9.09% { transform: translateY(-110%); opacity: 0; }
+  100%  { transform: translateY(-110%); opacity: 0; }
 }
 
-/* Progress number */
+/* ─── Progress number ─── */
 .intro-loader__progress-wrap {
   font-size: clamp(2rem, 5vw, 4rem);
   font-weight: 700;
@@ -283,11 +274,7 @@ onUnmounted(() => {
   min-width: 3ch;
 }
 
-.intro-loader__percent {
-  display: block;
-}
-
-/* Side lines */
+/* ─── Side lines ─── */
 .intro-loader__line {
   position: absolute;
   top: 10%;
@@ -295,32 +282,27 @@ onUnmounted(() => {
   width: 1px;
   background-color: #1a1400;
   transform-origin: center top;
-  animation: lineIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: lineIn 0.8s var(--ease-signature) forwards;
 }
 
-.intro-loader__line--left {
-  left: min(8vw, 80px);
-}
-
-.intro-loader__line--right {
-  right: min(8vw, 80px);
-}
+.intro-loader__line--left  { left: min(8vw, 80px); }
+.intro-loader__line--right { right: min(8vw, 80px); }
 
 @keyframes lineIn {
   from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
+  to   { transform: scaleY(1); }
 }
 
-.intro-loader__line--exit {
-  animation: lineOut 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.intro-loader--exiting .intro-loader__line {
+  animation: lineOut 0.6s var(--ease-signature) forwards;
 }
 
 @keyframes lineOut {
   from { transform: scaleY(1); }
-  to { transform: scaleY(0); }
+  to   { transform: scaleY(0); }
 }
 
-/* Enter prompt */
+/* ─── Enter prompt ─── */
 .intro-loader__prompt {
   position: absolute;
   bottom: min(10vh, 60px);
@@ -331,16 +313,16 @@ onUnmounted(() => {
   text-transform: uppercase;
   color: #1a1400;
   opacity: 0;
-  animation: promptFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+  animation: promptFadeIn 0.8s var(--ease-signature) 0.2s forwards;
   font-family: var(--font-satoshi, sans-serif);
 }
 
 @keyframes promptFadeIn {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  to { opacity: 0.6; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 0.6; transform: translateX(-50%) translateY(0); }
 }
 
-/* Screen reader only */
+/* ─── SR-only ─── */
 .sr-only {
   position: absolute;
   width: 1px;

@@ -3,7 +3,7 @@
     <div class="footer__inner">
       <div class="footer__left">
         <span class="footer__name">David Veluz</span>
-        <span class="footer__year">© {{ currentYear }}</span>
+        <span class="footer__year">&copy; {{ currentYear }}</span>
       </div>
       <div class="footer__links">
         <a href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -20,7 +20,7 @@ const currentYear = new Date().getFullYear()
 
 <style scoped>
 .footer {
-  padding: 3rem;
+  padding: clamp(1.5rem, 5vw, 3rem);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -41,6 +41,7 @@ const currentYear = new Date().getFullYear()
 .footer__name {
   font-size: 0.9rem;
   font-weight: 600;
+  font-family: var(--font-panchang, sans-serif);
 }
 
 .footer__year {
@@ -59,7 +60,7 @@ const currentYear = new Date().getFullYear()
   color: inherit;
   opacity: 0.4;
   letter-spacing: 0.05em;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s var(--ease-float);
 }
 
 .footer__links a:hover {

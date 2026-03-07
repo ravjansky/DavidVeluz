@@ -34,13 +34,6 @@ interface NodeType {
   vy: number
 }
 
-interface WaveOptions {
-  phase?: number
-  offset?: number
-  frequency?: number
-  amplitude?: number
-}
-
 class Wave {
   phase = 0
   offset = 0
@@ -48,7 +41,7 @@ class Wave {
   amplitude = 1
   private val = 0
 
-  constructor(opts: WaveOptions = {}) {
+  constructor(opts: { phase?: number; offset?: number; frequency?: number; amplitude?: number } = {}) {
     this.phase = opts.phase ?? 0
     this.offset = opts.offset ?? 0
     this.frequency = opts.frequency ?? 0.001
@@ -86,16 +79,19 @@ class Line {
 
   update(targetX: number, targetY: number, dampening: number, tension: number): void {
     let e = this.spring
-    let t = this.nodes[0]!
+    const firstNode = this.nodes[0]
+    if (!firstNode) return
 
-    t.vx += (targetX - t.x) * e
-    t.vy += (targetY - t.y) * e
+    firstNode.vx += (targetX - firstNode.x) * e
+    firstNode.vy += (targetY - firstNode.y) * e
 
     for (let i = 0, len = this.nodes.length; i < len; i++) {
-      t = this.nodes[i]!
+      const t = this.nodes[i]
+      if (!t) continue
 
       if (i > 0) {
-        const prev = this.nodes[i - 1]!
+        const prev = this.nodes[i - 1]
+        if (!prev) continue
         t.vx += (prev.x - t.x) * e
         t.vy += (prev.y - t.y) * e
         t.vx += prev.vx * dampening
@@ -112,21 +108,26 @@ class Line {
 
   draw(ctx: CanvasRenderingContext2D): void {
     const nodes = this.nodes
-    let nx = nodes[0]!.x
-    let ny = nodes[0]!.y
+    const firstNode = nodes[0]
+    if (!firstNode) return
+    
+    let nx = firstNode.x
+    let ny = firstNode.y
 
     ctx.moveTo(nx, ny)
 
     for (let a = 1, end = nodes.length - 2; a < end; a++) {
-      const curr = nodes[a]!
-      const next = nodes[a + 1]!
+      const curr = nodes[a]
+      const next = nodes[a + 1]
+      if (!curr || !next) continue
       nx = 0.5 * (curr.x + next.x)
       ny = 0.5 * (curr.y + next.y)
       ctx.quadraticCurveTo(curr.x, curr.y, nx, ny)
     }
 
-    const pen = nodes[nodes.length - 2]!
-    const last = nodes[nodes.length - 1]!
+    const pen = nodes[nodes.length - 2]
+    const last = nodes[nodes.length - 1]
+    if (!pen || !last) return
     ctx.quadraticCurveTo(pen.x, pen.y, last.x, last.y)
   }
 }
@@ -171,10 +172,8 @@ function resizeCanvas(): void {
 
 function getTotalVelocity(): number {
   let total = 0
-  for (let i = 0; i < lines.length; i++) {
-    const nodes = lines[i]!.nodes
-    for (let j = 0; j < nodes.length; j++) {
-      const n = nodes[j]!
+  for (const line of lines) {
+    for (const n of line.nodes) {
       total += Math.abs(n.vx) + Math.abs(n.vy)
     }
   }
@@ -183,7 +182,6 @@ function getTotalVelocity(): number {
 
 function render(): void {
   if (!running || !ctx) return
-
   const canvas = ctx.canvas
 
   ctx.globalCompositeOperation = 'source-over'
@@ -210,9 +208,9 @@ function render(): void {
   ctx.lineWidth = 1
 
   ctx.beginPath()
-  for (let i = 0; i < lines.length; i++) {
-    lines[i]!.update(pos.x, pos.y, props.dampening, props.tension)
-    lines[i]!.draw(ctx)
+  for (const line of lines) {
+    line.update(pos.x, pos.y, props.dampening, props.tension)
+    line.draw(ctx)
   }
   ctx.stroke()
 
@@ -232,12 +230,7 @@ function startLoop(): void {
 function onPointerMove(e: MouseEvent): void {
   pos.x = e.clientX
   pos.y = e.clientY
-
-  if (!initialized) {
-    initialized = true
-    createLines()
-  }
-
+  if (!initialized) { initialized = true; createLines() }
   startLoop()
 }
 
@@ -246,34 +239,22 @@ function onTouchMove(e: TouchEvent): void {
   if (!touch) return
   pos.x = touch.clientX
   pos.y = touch.clientY
-
-  if (!initialized) {
-    initialized = true
-    createLines()
-  }
-
+  if (!initialized) { initialized = true; createLines() }
   startLoop()
 }
 
-function onFocus(): void {
-  if (initialized) startLoop()
-}
-
+function onFocus(): void { if (initialized) startLoop() }
 function onBlur(): void {
   running = false
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId)
-    rafId = null
-  }
+  if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null }
 }
 
-function initCanvas(): void {
+onMounted(() => {
   const canvas = canvasRef.value
   if (!canvas) return
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    return
-  }
+  // Bail if user prefers reduced motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -297,14 +278,11 @@ function initCanvas(): void {
   if (screen?.orientation) {
     screen.orientation.addEventListener('change', resizeCanvas)
   }
-}
+})
 
-function cleanup(): void {
+onUnmounted(() => {
   running = false
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId)
-    rafId = null
-  }
+  if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null }
 
   document.removeEventListener('mousemove', onPointerMove)
   document.removeEventListener('touchmove', onTouchMove)
@@ -316,10 +294,7 @@ function cleanup(): void {
   if (screen?.orientation) {
     screen.orientation.removeEventListener('change', resizeCanvas)
   }
-}
-
-onMounted(initCanvas)
-onUnmounted(cleanup)
+})
 </script>
 
 <style scoped>

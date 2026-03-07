@@ -1,16 +1,21 @@
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
 
+/* ─────────────────────────────────────────────
+   Lenis smooth scroll — singleton pattern.
+   Piped through GSAP ticker for ScrollTrigger sync.
+   ───────────────────────────────────────────── */
+
 let instance: Lenis | null = null
 let tickerFn: ((time: number) => void) | null = null
 
 export function useLenis() {
-  function init() {
+  function init(): Lenis | null {
     if (instance) return instance
 
     instance = new Lenis({
       duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     })
 
     tickerFn = (time: number) => {
@@ -36,5 +41,10 @@ export function useLenis() {
     instance?.scrollTo(target, options)
   }
 
-  return { init, destroy, scrollTo, lenis: instance }
+  return {
+    init,
+    destroy,
+    scrollTo,
+    get lenis() { return instance },
+  }
 }
