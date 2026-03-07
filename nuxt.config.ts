@@ -8,6 +8,26 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-07-15',
 
+  app: {
+    head: {
+      link: [
+        // FontShare — Panchang & Satoshi
+        { rel: 'preconnect', href: 'https://api.fontshare.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://api.fontshare.com/v2/css?f[]=panchang@200,500,700,800&f[]=satoshi@300,400,500,700&display=swap',
+        },
+        // Google Fonts — Climate Crisis
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap',
+        },
+      ],
+    },
+  },
+
   modules: [
     '@nuxt/eslint',
     '@nuxt/fonts',
@@ -18,11 +38,17 @@ export default defineNuxtConfig({
     'nuxt-lucide-icons'
   ],
 
-  // 4. Cloudinary & Performance Config
+  // Cloudinary & Performance Config
   image: {
     cloudinary: {
       baseURL: 'https://res.cloudinary.com/<your-cloud-name>/image/upload/'
     }
+  },
+
+  vite: {
+    optimizeDeps: {
+      include: ['ogl'],
+    },
   },
 
   devtools: { enabled: true }

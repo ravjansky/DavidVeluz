@@ -2,6 +2,7 @@ import Lenis from 'lenis'
 import { gsap } from 'gsap'
 
 let instance: Lenis | null = null
+let tickerFn: ((time: number) => void) | null = null
 
 export function useLenis() {
   function init() {
@@ -12,16 +13,21 @@ export function useLenis() {
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     })
 
-    gsap.ticker.add((time) => {
-      instance!.raf(time * 1000)
-    })
+    tickerFn = (time: number) => {
+      instance?.raf(time * 1000)
+    }
 
+    gsap.ticker.add(tickerFn)
     gsap.ticker.lagSmoothing(0)
 
     return instance
   }
 
   function destroy() {
+    if (tickerFn) {
+      gsap.ticker.remove(tickerFn)
+      tickerFn = null
+    }
     instance?.destroy()
     instance = null
   }

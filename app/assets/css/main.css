@@ -3,6 +3,11 @@
   --ease-signature: cubic-bezier(0.22, 1, 0.36, 1); /* Project Default */
   --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);    /* Subtle Changes */
   --ease-float: cubic-bezier(0.25, 0.8, 0.25, 1);   /* Hover & Motion */
+
+  /* Font Families */
+  --font-panchang: 'Panchang', sans-serif;
+  --font-satoshi: 'Satoshi', sans-serif;
+  --font-climate: 'Climate Crisis', system-ui;
 }
 
 /* Global Transition Rule */
@@ -11,8 +16,17 @@
 }
 
 /* Base performance styles */
+html {
+  background-color: #000;
+}
+
 body {
   overflow-x: hidden;
-  background-color: #000; /* Assuming a dark designer vibe */
+  background-color: transparent;
   color: #fff;
+}
+
+/* Scroll lock for intro loader */
+body.scroll-locked {
+  overflow: hidden !important;
 }

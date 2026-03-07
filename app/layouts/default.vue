@@ -1,37 +1,53 @@
 <template>
-  <div>
-    <slot />
+  <div class="layout">
+    <BackgroundLiquidBackground
+      v-if="!prefersReducedMotion"
+      ref="bgRef"
+    />
+    <CursorFluidCursor
+      v-if="!isMobile && !prefersReducedMotion"
+    />
+    <div class="layout__content">
+      <slot />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, provide, onMounted, onUnmounted } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import Lenis from 'lenis'
 
 gsap.registerPlugin(ScrollTrigger)
 
-let lenis: Lenis | null = null
+const { isMobile, prefersReducedMotion } = usePerformanceMetrics()
+const { init: initLenis, destroy: destroyLenis } = useLenis()
+
+const bgRef = ref<{ setShaderColor: (r: number, g: number, b: number, duration?: number, blend?: number) => void; setTheme: (index: number) => void; setSpeed: (speed: number) => void } | null>(null)
+
+provide('setBackgroundColor', (r: number, g: number, b: number, duration?: number, blend?: number) => {
+  bgRef.value?.setShaderColor(r, g, b, duration, blend)
+})
+
+provide('setBackgroundTheme', (index: number) => {
+  bgRef.value?.setTheme(index)
+})
 
 onMounted(() => {
-  lenis = new Lenis({
-    duration: 1.2,
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  })
-
-  gsap.ticker.add((time) => {
-    lenis!.raf(time * 1000)
-  })
-
-  gsap.ticker.lagSmoothing(0)
-
-  lenis.on('scroll', ScrollTrigger.update)
+  const lenis = initLenis()
+  if (lenis) {
+    lenis.on('scroll', ScrollTrigger.update)
+  }
 })
 
 onUnmounted(() => {
-  lenis?.destroy()
-  gsap.ticker.remove((time) => {
-    lenis?.raf(time * 1000)
-  })
+  destroyLenis()
 })
 </script>
+
+<style scoped>
+.layout__content {
+  position: relative;
+  z-index: 1;
+}
+</style>
