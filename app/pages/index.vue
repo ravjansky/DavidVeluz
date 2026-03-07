@@ -29,15 +29,16 @@ interface SectionColorMap {
   selector: string
   color: [number, number, number]
   duration: number
+  blend: number
 }
 
 const sectionColors: SectionColorMap[] = [
-  { selector: '.hero',     color: [0.05, 0.05, 0.08], duration: 1.5 },
-  { selector: '.who-am-i', color: [0.08, 0.06, 0.12], duration: 1.2 },
-  { selector: '.about-me', color: [0.06, 0.10, 0.10], duration: 1.2 },
-  { selector: '.skills',   color: [0.10, 0.06, 0.06], duration: 1.2 },
-  { selector: '.process',  color: [0.05, 0.05, 0.08], duration: 1.2 },
-  { selector: '.footer',   color: [0.02, 0.02, 0.04], duration: 1.0 },
+  { selector: '.hero',     color: [1.2, 0.3, 0.3],    duration: 1.5, blend: 0.5 },
+  { selector: '.who-am-i', color: [-1.2, 0.6, 1.8],   duration: 1.2, blend: 0.3 },
+  { selector: '.about-me', color: [-1.2, 0.6, 1.8],   duration: 1.2, blend: 0.5 },
+  { selector: '.skills',   color: [5.0, 0.0, 0.0],    duration: 1.2, blend: 0.5 },
+  { selector: '.process',  color: [-1.1, -1.1, -1.1],  duration: 1.2, blend: 0.5 },
+  { selector: '.footer',   color: [-1.1, -1.1, 1.1],   duration: 1.0, blend: 0.5 },
 ]
 
 onMounted(() => {
@@ -46,12 +47,15 @@ onMounted(() => {
   // Respect reduced motion — skip ScrollTrigger color shifts
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-  sectionColors.forEach(({ selector, color, duration }) => {
+  sectionColors.forEach(({ selector, color, duration, blend }, index) => {
+    const prev = sectionColors[index - 1]
     ScrollTrigger.create({
       trigger: selector,
       start: 'top 60%',
-      onEnter: () => setBackgroundColor(color[0], color[1], color[2], duration),
-      onEnterBack: () => setBackgroundColor(color[0], color[1], color[2], duration),
+      onEnter: () => setBackgroundColor(color[0], color[1], color[2], duration, blend),
+      onLeaveBack: () => {
+        if (prev) setBackgroundColor(prev.color[0], prev.color[1], prev.color[2], prev.duration, prev.blend)
+      },
     })
   })
 })

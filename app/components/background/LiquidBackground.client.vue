@@ -1,9 +1,10 @@
 <template>
-  <div ref="ctnDom" class="liquid-bg"></div>
+  <div ref="ctnDom" class="liquid-bg">
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed, nextTick } from 'vue'
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl'
 import type { OGLRenderingContext } from 'ogl'
 import { gsap } from 'gsap'
@@ -15,6 +16,7 @@ let animateId = 0
 let renderer: Renderer | null = null
 let gl: OGLRenderingContext | null = null
 let mesh: Mesh | null = null
+
 
 // Mouse/touch tracking for ripple distortion
 const mouseState = {
@@ -163,7 +165,9 @@ const computedDPR = computed(() => {
 })
 
 function resizeCanvas() {
-  if (!ctnDom.value || !gl || !renderer) return
+  if (!ctnDom.value || !gl || !renderer) {
+    return
+  }
   const dpr = computedDPR.value
   const width = window.innerWidth
   const height = window.innerHeight
@@ -195,7 +199,7 @@ function onPointerMove(x: number, y: number) {
   const dy = normY - mouseState.prevY
   const dist = Math.sqrt(dx * dx + dy * dy)
 
-  mouseState.velocity = Math.min(dist * 50, 3.0)
+  mouseState.velocity = Math.min(dist * 15, 3.0)
   mouseState.prevX = mouseState.x
   mouseState.prevY = mouseState.y
   mouseState.x = normX
@@ -221,12 +225,15 @@ function handleTouchStart(e: TouchEvent) {
 
 function update(t: number) {
   animateId = requestAnimationFrame(update)
-  if (!mesh || !renderer) return
+  if (!mesh || !renderer) {
+    console.warn('[LiquidBackground] update: mesh or renderer missing', { mesh: !!mesh, renderer: !!renderer })
+    return
+  }
 
-  const elapsed = t * 0.001
+  const elapsed = t * 0.005
   mesh.program.uniforms.uTime.value = elapsed
 
-  mouseState.velocity *= 0.32
+  mouseState.velocity *= 0.65
   mesh.program.uniforms.uMouse.value = [mouseState.x, mouseState.y]
   mesh.program.uniforms.uMouseVelocity.value = mouseState.velocity
   mesh.program.uniforms.uClickPos.value = [mouseState.clickX, mouseState.clickY]
@@ -242,15 +249,24 @@ function update(t: number) {
   renderer.render({ scene: mesh })
 }
 
-onMounted(() => {
-  if (!ctnDom.value) return
+onMounted(async () => {
+  
+  // Wait for DOM to be fully ready
+  await nextTick()
+  
+  if (!ctnDom.value) {
+    return
+  }
 
   try {
     renderer = new Renderer({ alpha: true, antialias: false })
+    
     gl = renderer.gl as OGLRenderingContext
+    
     gl.clearColor(0, 0, 0, 1)
 
     const geometry = new Triangle(gl)
+    
     const program = new Program(gl, {
       vertex: vert,
       fragment: frag,
@@ -272,6 +288,7 @@ onMounted(() => {
 
     const canvas = gl.canvas as HTMLCanvasElement
     ctnDom.value.appendChild(canvas)
+    
     resizeCanvas()
 
     window.addEventListener('resize', resizeCanvas)
@@ -283,6 +300,7 @@ onMounted(() => {
     animateId = requestAnimationFrame(update)
   } catch (error) {
     console.error('[LiquidBackground] Init error:', error)
+    console.error('[LiquidBackground] Error stack:', error instanceof Error ? error.stack : 'no stack')
   }
 })
 
@@ -297,12 +315,16 @@ onUnmounted(() => {
   if (ctnDom.value && gl?.canvas) {
     try {
       ctnDom.value.removeChild(gl.canvas as HTMLCanvasElement)
-    } catch { /* already removed */ }
+    } catch (e) {
+      console.warn('Error removing canvas:', e)
+    }
   }
 
   try {
     gl?.getExtension('WEBGL_lose_context')?.loseContext()
-  } catch { /* no-op */ }
+  } catch (e) { 
+    console.warn('Error losing context:', e)
+  }
 
   renderer = null
   gl = null

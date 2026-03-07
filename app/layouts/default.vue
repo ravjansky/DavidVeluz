@@ -1,15 +1,19 @@
 <template>
   <div class="layout">
-    <!-- Liquid BG — renders on client only (.client.vue), skipped on reduced motion -->
-    <BackgroundLiquidBackground
-      v-if="!prefersReducedMotion"
-      ref="bgRef"
-    />
+    <!-- Liquid BG — client only, skipped on reduced motion -->
+    <ClientOnly>
+      <BackgroundLiquidBackground
+        v-if="!prefersReducedMotion"
+        ref="bgRef"
+      />
+    </ClientOnly>
 
     <!-- Fluid cursor — desktop only, skipped on reduced motion -->
-    <CursorFluidCursor
-      v-if="!isMobile && !prefersReducedMotion"
-    />
+    <ClientOnly>
+      <CursorFluidCursor
+        v-if="!isMobile && !prefersReducedMotion"
+      />
+    </ClientOnly>
 
     <div class="layout__content">
       <slot />
@@ -24,8 +28,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
+const route = useRoute()
+
 const { isMobile, prefersReducedMotion } = usePerformanceMetrics()
+
 const { init: initLenis, destroy: destroyLenis } = useLenis()
+
+// Only enable Lenis on index page, not on showcase
+const shouldInitLenis = route.name === 'index'
 
 /* ─── Background ref + exposed API ─── */
 interface BgExposed {
@@ -49,14 +59,19 @@ provide('setBackgroundSpeed', (speed: number) => {
 })
 
 onMounted(() => {
-  const lenis = initLenis()
-  if (lenis) {
-    lenis.on('scroll', ScrollTrigger.update)
-  }
+  
+  if (shouldInitLenis) {
+    const lenis = initLenis()
+    if (lenis) {
+      lenis.on('scroll', ScrollTrigger.update)
+    } 
+  } 
 })
 
 onUnmounted(() => {
-  destroyLenis()
+  if (shouldInitLenis) {
+    destroyLenis()
+  }
 })
 </script>
 
