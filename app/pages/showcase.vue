@@ -32,6 +32,11 @@ useSeoMeta({
   min-height: 100vh;
   padding: 2rem clamp(1.5rem, 5vw, 3rem);
   color: #fff;
+  /*
+    Liquid BG is killed on this page for GPU savings.
+    Solid dark bg keeps things readable without the shader.
+  */
+  background: #0a0a0c;
 }
 
 .showcase__header {

@@ -107,12 +107,14 @@ const sectionColors: SectionColorMap[] = [
   },
 
   // ── Process ──
-  // Forward: burnished gold | Reverse: cool slate blue
+  // FIX: Darkened significantly so the section is readable
+  // without any CSS overlay. The shader itself goes dark here.
+  // Forward: deep burnt amber | Reverse: dark navy
   {
     selector: '.process',
-    enter:     [0.65, 0.3, 0.02],
-    enterBack: [0.15, 0.2, 0.5],
-    blend: 0.75, blendBack: 0.7,
+    enter:     [0.25, 0.1, 0.01],
+    enterBack: [0.08, 0.1, 0.3],
+    blend: 0.85, blendBack: 0.8,
     duration: 1,
   },
 

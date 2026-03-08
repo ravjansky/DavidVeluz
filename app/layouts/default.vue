@@ -1,9 +1,16 @@
 <template>
   <div class="layout">
-    <!-- Liquid BG — client only, skipped on reduced motion -->
+    <!--
+      Liquid BG — client only, skipped on reduced motion.
+
+      FIX: Also killed entirely on showcase page.
+      v-if destroys the component + WebGL context = zero GPU cost.
+      Remounting on navigation back is a ~50ms one-time hit,
+      far cheaper than bleeding GPU frames on a page that doesn't need it.
+    -->
     <ClientOnly>
       <BackgroundLiquidBackground
-        v-if="!prefersReducedMotion"
+        v-if="!prefersReducedMotion && shouldRenderBackground"
         ref="bgRef"
       />
     </ClientOnly>
@@ -22,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, provide, onMounted, onUnmounted } from 'vue'
+import { ref, computed, provide, onMounted, onUnmounted, watch } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -35,7 +42,17 @@ const { isMobile, prefersReducedMotion } = usePerformanceMetrics()
 const { init: initLenis, destroy: destroyLenis } = useLenis()
 
 // Only enable Lenis on index page, not on showcase
-const shouldInitLenis = route.name === 'index'
+const shouldInitLenis = computed(() => route.name === 'index')
+
+/*
+  Route-aware background control.
+  Showcase doesn't need the shader — killing the component
+  frees the WebGL context entirely. On mobile this is a
+  meaningful battery/thermal win.
+*/
+const shouldRenderBackground = computed(() => {
+  return route.name !== 'showcase' && route.path !== '/showcase'
+})
 
 /* ─── Background ref + exposed API ─── */
 interface BgExposed {
@@ -58,19 +75,30 @@ provide('setBackgroundSpeed', (speed: number) => {
   bgRef.value?.setSpeed(speed)
 })
 
-onMounted(() => {
-  
-  if (shouldInitLenis) {
+/* ─── Lenis lifecycle — reactive to route changes ─── */
+let lenisInitialized = false
+
+function setupLenis() {
+  if (shouldInitLenis.value && !lenisInitialized) {
     const lenis = initLenis()
     if (lenis) {
       lenis.on('scroll', ScrollTrigger.update)
-    } 
-  } 
-})
+    }
+    lenisInitialized = true
+  } else if (!shouldInitLenis.value && lenisInitialized) {
+    destroyLenis()
+    lenisInitialized = false
+  }
+}
+
+watch(shouldInitLenis, setupLenis)
+
+onMounted(setupLenis)
 
 onUnmounted(() => {
-  if (shouldInitLenis) {
+  if (lenisInitialized) {
     destroyLenis()
+    lenisInitialized = false
   }
 })
 </script>

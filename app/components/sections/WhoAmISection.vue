@@ -97,6 +97,16 @@ const REV_FROM  = [0.15, 0.45, 0.5] as const   // at progress=1
 const REV_TO    = [0.6, 0.3, 0.12] as const     // at progress=0
 const REV_BLEND = [0.55, 0.6] as const
 
+/*
+  Color dead zone threshold.
+
+  FIX: The original code changed shader color at progress=0, which
+  caused a visible snap the instant the section pinned — even before
+  the mask opened. Now we hold the hero's color until the mask has
+  visibly opened (~3% progress). This makes the pin feel seamless.
+*/
+const COLOR_START_THRESHOLD = 0.03
+
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t
 }
@@ -142,7 +152,6 @@ const revealMask = computed(() => {
 const glowGradient = computed(() => {
   const r = radius.value
 
-  // Blue for forward, warm amber for reverse
   const glowColor = isForward.value
     ? { main: 'rgba(40, 120, 255, 0.35)', fade: 'rgba(30, 80, 200, 0.10)' }
     : { main: 'rgba(255, 165, 60, 0.35)', fade: 'rgba(200, 120, 30, 0.10)' }
@@ -162,25 +171,29 @@ const glowOpacity = computed(() => {
 })
 
 // ─── Progressive BG color shift ───
-// Uses the locked entry direction to pick which color pair to lerp.
-// Forward: hero warm → blue as portal opens
-// Reverse: teal → warm amber as portal closes back up
+// FIX: Remap progress so color lerp only starts AFTER the mask opens.
+// Below the threshold, shader stays at whatever color the hero left it.
 watch(progress, (p) => {
   if (!setBackgroundColor || prefersReducedMotion.value) return
 
-  // Forward: p=0 → FWD_FROM (hero warm), p=1 → FWD_TO (blue)
-  // Reverse: p=1 → REV_FROM (teal),      p=0 → REV_TO (warm amber)
+  // Dead zone — don't touch the shader color during initial pin.
+  // The mask isn't open yet so any color change is visible and jarring.
+  if (p < COLOR_START_THRESHOLD) return
+
+  // Remap p so that COLOR_START_THRESHOLD..1 → 0..1
+  const remapped = (p - COLOR_START_THRESHOLD) / (1 - COLOR_START_THRESHOLD)
+
   const startColor = isForward.value ? FWD_FROM : REV_TO
   const endColor   = isForward.value ? FWD_TO : REV_FROM
   const startBlend = isForward.value ? FWD_BLEND[0] : REV_BLEND[1]
   const endBlend   = isForward.value ? FWD_BLEND[1] : REV_BLEND[0]
 
   setBackgroundColor(
-    lerp(startColor[0], endColor[0], p),
-    lerp(startColor[1], endColor[1], p),
-    lerp(startColor[2], endColor[2], p),
+    lerp(startColor[0], endColor[0], remapped),
+    lerp(startColor[1], endColor[1], remapped),
+    lerp(startColor[2], endColor[2], remapped),
     0,
-    lerp(startBlend, endBlend, p),
+    lerp(startBlend, endBlend, remapped),
   )
 })
 
@@ -305,7 +318,6 @@ onUnmounted(() => {
   font-family: var(--font-panchang, sans-serif);
   line-height: 1.1;
   margin: 0;
-  /* Blue gradient — brand anchor, stays constant */
   background: linear-gradient(135deg, #2878ff, #60a5fa, #e0e8ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

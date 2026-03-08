@@ -15,9 +15,10 @@
         <!--
           SVG line — absolutely positioned over the card stack.
           Draws itself via stroke-dashoffset as the user scrolls.
-          preserveAspectRatio="none" stretches the hand-drawn path
-          to fit the tall card column — curves distort slightly but
-          the overall flow (upper-left → lower-right) holds.
+
+          Key fix: viewBox now tightly wraps the path's actual bounds
+          so preserveAspectRatio="none" stretches the line from
+          first card to last card — not floating in dead space.
         -->
         <svg
           class="process__svg"
@@ -28,7 +29,7 @@
         >
           <path
             ref="pathRef"
-            d="M 0 200 C 300 50 647 391 1047 187 C 1639 -128 1190 493 397 588 C -157 689 463 34 547 416 C 758 1285 1544 297 1098 482 C -119 1013 1756 1074 941 1180"
+            d="M 400 -150 C 300 50 647 391 1047 187 C 1639 -128 1190 493 397 588 C -157 689 463 34 547 416 C 758 1285 1544 297 1098 482 C -119 1013 1756 1074 941 1350"
             stroke="url(#processLineGrad)"
             stroke-width="3"
             stroke-linecap="round"
@@ -67,8 +68,11 @@
 
           <!--
             Glow edge — amber vertical light line. Sits OUTSIDE the
-            clipped inner so it's always visible. Sweeps left→right
-            in sync with the reveal, then fades at the end.
+            clipped inner so it's always visible.
+
+            Fix: edge now uses the SAME duration + ease as the clip-path
+            so it tracks the reveal boundary exactly. No more running
+            ahead of the content it's supposed to be revealing.
           -->
           <div
             class="process__step-edge"
@@ -163,8 +167,8 @@ onMounted(() => {
 
     /* ── SVG line draw ──
        stroke-dashoffset 100→0 over the full timeline scroll.
-       ease: signature gives a fast start that decelerates —
-       feels like the pen is drawing with natural hand momentum.
+       Signature ease: fast start that decelerates —
+       pen drawing with natural hand momentum.
     */
     if (pathRef.value && timelineRef.value) {
       gsap.set(pathRef.value, {
@@ -185,10 +189,12 @@ onMounted(() => {
     }
 
     /* ── Card glow-wipe reveals ──
-       Each card: clip-path wipes left→right.
-       Glow edge sweeps in sync, fades at the end.
-       Stagger is organic — card 2 enters viewport ~25% after
-       card 1 starts due to natural spacing + trigger points.
+       FIX: The glow edge now uses the SAME duration and ease as the
+       clip-path reveal. This means the edge sits exactly at the
+       boundary of the wipe — never running ahead of the content.
+
+       Old behavior: edge at 50% left when clip was only 30% open.
+       New behavior: edge left% === clip reveal% at every frame.
     */
     stepInnerRefs.value.forEach((inner, i) => {
       if (!inner) return
@@ -212,24 +218,35 @@ onMounted(() => {
         },
       })
 
-      // Wipe reveal
+      // Wipe reveal — clip opens left to right
       tl.to(inner, {
         clipPath: 'inset(0 0% 0 0)',
         duration: 1,
         ease: EASE.signature,
-      })
+      }, 0)
 
-      // Glow edge — sweeps across then fades out
       if (edge) {
-        tl.fromTo(edge,
-          { left: '0%', opacity: 0 },
-          { left: '50%', opacity: 0.9, duration: 0.5, ease: EASE.smooth },
-          0,
-        )
-        tl.to(edge,
-          { left: '100%', opacity: 0, duration: 0.5, ease: EASE.float },
-          0.5,
-        )
+        // Edge sweeps in perfect sync with the clip boundary
+        // Same duration + ease = same position at every frame
+        tl.to(edge, {
+          left: '100%',
+          duration: 1,
+          ease: EASE.signature,
+        }, 0)
+
+        // Quick fade in — edge appears as the wipe starts
+        tl.to(edge, {
+          opacity: 0.9,
+          duration: 0.08,
+          ease: EASE.smooth,
+        }, 0)
+
+        // Fade out at the tail — edge dissolves as the card is fully revealed
+        tl.to(edge, {
+          opacity: 0,
+          duration: 0.12,
+          ease: EASE.smooth,
+        }, 0.88)
       }
     })
   }, sectionRef.value)
@@ -242,7 +259,10 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* ─── Section ─── */
+/* ─── Section ───
+   No overlay anymore — the shader itself handles
+   the darkened color for this section via index.vue.
+*/
 .process {
   position: relative;
   width: 100%;
@@ -250,8 +270,7 @@ onUnmounted(() => {
   padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 3rem);
   display: flex;
   justify-content: center;
-  /* Semi-transparent overlay for readability over the liquid BG */
-  background: rgba(10, 10, 12, 0.3);
+  background: transparent;
   z-index: 1;
 }
 
@@ -329,7 +348,7 @@ onUnmounted(() => {
 .process__step {
   position: relative;
   width: 100%;
-  /* Cards need to be above the SVG where they overlap */
+  /* Cards above SVG where they overlap */
   z-index: 5;
 }
 
@@ -344,7 +363,7 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 174, 0, 0.12);
   border-radius: 12px;
   overflow: hidden;
-  /* Initial state — fully clipped. GSAP overrides this. */
+  /* Initial state — fully clipped. GSAP overrides. */
   clip-path: inset(0 100% 0 0);
   transition: border-color 0.4s var(--ease-float);
 }
@@ -396,7 +415,7 @@ onUnmounted(() => {
   max-width: 600px;
 }
 
-/* ─── Glow edge — sweeps across during reveal ─── */
+/* ─── Glow edge — sweeps in sync with clip reveal ─── */
 .process__step-edge {
   position: absolute;
   top: 0;

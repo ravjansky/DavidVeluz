@@ -48,15 +48,6 @@ onMounted(() => {
   if (prefersReducedMotion) return
 
   ctx = gsap.context(() => {
-    /*
-      GSAP handles the marquee instead of CSS here because we need
-      scroll-direction reversal — CSS animations can't flip direction
-      based on scroll state. GSAP's timeScale() makes this trivial.
-      
-      The seamless loop: 8 duplicated spans, animate xPercent to -50%
-      (half the total), repeat infinitely. The second half is a clone
-      of the first, so the jump back to 0 is invisible.
-    */
 
     // Row 1 — left by default
     const topTween = gsap.to(trackTop.value, {
