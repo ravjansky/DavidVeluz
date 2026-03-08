@@ -26,50 +26,146 @@ useSeoMeta({
 type SetColorFn = (r: number, g: number, b: number, duration?: number, blend?: number) => void
 const setBackgroundColor = inject<SetColorFn | null>('setBackgroundColor', null)
 
+/* ─────────────────────────────────────────────
+   Dual-color system
+   ─────────────────────────────────────────────
+   Every section carries two palettes:
+   • enter / blend       — used when scrolling DOWN into the section
+   • enterBack / blendBack — used when scrolling BACK UP into the section
+
+   The "return trip" palette is intentionally different from the
+   forward trip — creates a subtle sense that the site evolves as
+   you revisit sections, without randomness.
+
+   skipTrigger: true → the component drives its own progressive
+   color shift via its pinned ScrollTrigger. The entry still exists
+   in the array so adjacent sections can reference it as `prev`.
+   ───────────────────────────────────────────── */
+
 interface SectionColorMap {
   selector: string
-  color: [number, number, number]
-  duration: number
+  enter: [number, number, number]
+  enterBack: [number, number, number]
   blend: number
+  blendBack: number
+  duration: number
+  skipTrigger?: boolean
 }
 
 const sectionColors: SectionColorMap[] = [
-  // 1. Deepened Hero Pink (Establishes the bold brand entry)
-  { selector: '.hero',     color: [0.9, 0.2, 0.2],    duration: 1, blend: 0.6 },
+  // ── Hero ──
+  // Same color both ways — it's the origin, no "return" context
+  {
+    selector: '.hero',
+    enter:     [0.9, 0.2, 0.2],
+    enterBack: [0.9, 0.2, 0.2],
+    blend: 0.6, blendBack: 0.6,
+    duration: 1,
+  },
 
-  // 2. Rich Corporate Blue (Hard cut to professional, clear tech blue)
-  { selector: '.who-am-i', color: [0.05, 0.25, 0.7],  duration: 1, blend: 0.65 },
+  // ── Who Am I ──
+  // Component handles progressive lerp internally (pinned).
+  // enter = forward END state (blue), enterBack = reverse START state (teal).
+  // These values are used by adjacent sections' onLeaveBack for handoff.
+  {
+    selector: '.who-am-i',
+    enter:     [0.05, 0.25, 0.7],
+    enterBack: [0.15, 0.45, 0.5],
+    blend: 0.65, blendBack: 0.55,
+    duration: 1,
+    skipTrigger: true,
+  },
 
-  // 3. Deep Royal Violet (A heavy, dark purple. Authoritative and grounded)
-  { selector: '.about-me', color: [0.25, 0.05, 0.45], duration: 1, blend: 0.7 },
+  // ── About Me ──
+  // Forward: deep violet | Reverse: steel blue
+  {
+    selector: '.about-me',
+    enter:     [0.25, 0.05, 0.45],
+    enterBack: [0.1, 0.3, 0.45],
+    blend: 0.7, blendBack: 0.65,
+    duration: 1,
+  },
 
-  // 4. Deep Emerald (High contrast shift to keep the eye engaged)
-  { selector: '.skills',   color: [0.05, 0.35, 0.25], duration: 1, blend: 0.65 },
+  // ── Projects ──
+  // Forward: dark sapphire | Reverse: warm burgundy
+  {
+    selector: '.projects',
+    enter:     [0.1, 0.15, 0.5],
+    enterBack: [0.4, 0.1, 0.25],
+    blend: 0.7, blendBack: 0.65,
+    duration: 1,
+  },
 
-  // 5. Dark Sapphire (Cooling it back down into the blue spectrum)
-  { selector: '.projects', color: [0.1, 0.15, 0.5],   duration: 1, blend: 0.7 },
+  // ── Skills ──
+  // Forward: deep emerald | Reverse: dusty mauve
+  {
+    selector: '.skills',
+    enter:     [0.05, 0.35, 0.25],
+    enterBack: [0.35, 0.15, 0.35],
+    blend: 0.65, blendBack: 0.65,
+    duration: 1,
+  },
 
-  // 6. Burnished Gold / Dark Orange (Rich, heavy amber for the process breakdown)
-  { selector: '.process',  color: [0.65, 0.3, 0.02],  duration: 1, blend: 0.75 },
+  // ── Process ──
+  // Forward: burnished gold | Reverse: cool slate blue
+  {
+    selector: '.process',
+    enter:     [0.65, 0.3, 0.02],
+    enterBack: [0.15, 0.2, 0.5],
+    blend: 0.75, blendBack: 0.7,
+    duration: 1,
+  },
 
-  // 7. Midnight Blue (Almost black, but keeps the corporate undertone to finish)
-  { selector: '.footer',   color: [0.02, 0.04, 0.08], duration: 1, blend: 0.8 },
+  // ── Footer ──
+  // Forward: midnight | Reverse: deep navy (subtle shift)
+  {
+    selector: '.footer',
+    enter:     [0.02, 0.04, 0.08],
+    enterBack: [0.05, 0.08, 0.15],
+    blend: 0.8, blendBack: 0.75,
+    duration: 1,
+  },
 ]
 
 onMounted(() => {
   if (!setBackgroundColor) return
-
-  // Respect reduced motion — skip ScrollTrigger color shifts
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-  sectionColors.forEach(({ selector, color, duration, blend }, index) => {
+  sectionColors.forEach((section, index) => {
+    // Who-am-i handles its own — skip creating a trigger for it
+    if (section.skipTrigger) return
+
     const prev = sectionColors[index - 1]
+
     ScrollTrigger.create({
-      trigger: selector,
+      trigger: section.selector,
       start: 'top 60%',
-      onEnter: () => setBackgroundColor(color[0], color[1], color[2], duration, blend),
+
+      // Scrolling DOWN into this section → forward palette
+      onEnter: () => {
+        setBackgroundColor(
+          section.enter[0], section.enter[1], section.enter[2],
+          section.duration, section.blend,
+        )
+      },
+
+      // Scrolling BACK UP into this section → reverse palette
+      onEnterBack: () => {
+        setBackgroundColor(
+          section.enterBack[0], section.enterBack[1], section.enterBack[2],
+          section.duration, section.blendBack,
+        )
+      },
+
+      // Scrolling BACK UP past this section → restore previous
+      // section's reverse palette (since we're entering it from below)
       onLeaveBack: () => {
-        if (prev) setBackgroundColor(prev.color[0], prev.color[1], prev.color[2], prev.duration, prev.blend)
+        if (prev) {
+          setBackgroundColor(
+            prev.enterBack[0], prev.enterBack[1], prev.enterBack[2],
+            prev.duration, prev.blendBack,
+          )
+        }
       },
     })
   })

@@ -14,14 +14,14 @@
       <!-- Row 1: Name — moves left by default -->
       <div class="marquee-track">
         <div class="marquee-content" ref="trackTop">
-          <span class="marquee-item" v-for="n in 8" :key="'name-' + n"> DAVID + VELUZ +</span>
+          <span class="marquee-item" v-for="n in 8" :key="'name-' + n"> DAVID ~ VELUZ ~</span>
         </div>
       </div>
 
       <!-- Row 2: Role — moves right by default -->
       <div class="marquee-track">
         <div class="marquee-content" ref="trackBottom">
-          <span class="marquee-item" v-for="n in 8" :key="'role-' + n"> CREATIVE ~ DEVELOPER ~</span>
+          <span class="marquee-item" v-for="n in 8" :key="'role-' + n"> CREATIVE + DEVELOPER + DESIGNER +</span>
         </div>
       </div>
     </div>
@@ -138,12 +138,7 @@ onUnmounted(() => {
   justify-content: center;
   /* Transparent so your WebGL/fluid canvas shows through */
   background: transparent;
-  /* 
-    IMPORTANT for mix-blend-mode: the hero itself must NOT create
-    an isolating stacking context. Avoid setting opacity, filter,
-    or isolation here. The blend needs to composite against whatever
-    is behind the hero (your canvas/background).
-  */
+  mix-blend-mode: difference;
 }
 
 /* ── Marquee layout ── */
@@ -156,21 +151,6 @@ onUnmounted(() => {
   transform-origin: center center;
   width: 200vw;
   margin-left: -50vw;
-  /* 
-    mix-blend-mode: difference
-    
-    How this works: white text + difference = inverts to the 
-    complementary color of whatever's behind it.
-    - On a pink fluid bg → text appears green/teal
-    - On a yellow bg → text appears blue/violet  
-    - On black → stays white
-    - On white → goes black
-    
-    If your background is a <canvas> or absolutely-positioned div,
-    make sure the hero and this wrapper don't create an isolated
-    stacking context (no opacity < 1, no filter, no isolation: isolate
-    on parent elements between this and the background).
-  */
   mix-blend-mode: difference;
 }
 
