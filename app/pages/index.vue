@@ -33,12 +33,12 @@ interface SectionColorMap {
 }
 
 const sectionColors: SectionColorMap[] = [
-  { selector: '.hero',     color: [1.2, 0.3, 0.3],    duration: 1.5, blend: 0.5 },
-  { selector: '.who-am-i', color: [-1.2, 0.6, 1.8],   duration: 1.2, blend: 0.3 },
-  { selector: '.about-me', color: [-1.2, 0.6, 1.8],   duration: 1.2, blend: 0.5 },
-  { selector: '.skills',   color: [5.0, 0.0, 0.0],    duration: 1.2, blend: 0.5 },
-  { selector: '.process',  color: [-1.1, -1.1, -1.1],  duration: 1.2, blend: 0.5 },
-  { selector: '.footer',   color: [-1.1, -1.1, 1.1],   duration: 1.0, blend: 0.5 },
+  { selector: '.hero',     color: [1.2, 0.3, 0.3],    duration: 1, blend: 0.5 },
+  { selector: '.who-am-i', color: [-1.2, 0.6, 1.8],   duration: 1, blend: 0.3 },
+  { selector: '.about-me', color: [-1.2, 0.6, 1.8],   duration: 1, blend: 0.5 },
+  { selector: '.skills',   color: [5.0, 0.0, 0.0],    duration: 1, blend: 0.5 },
+  { selector: '.process',  color: [-1.1, -1.1, -1.1],  duration: 1, blend: 0.5 },
+  { selector: '.footer',   color: [-1.1, -1.1, 1.1],   duration: 1, blend: 0.5 },
 ]
 
 onMounted(() => {

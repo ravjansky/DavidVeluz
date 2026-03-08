@@ -4,7 +4,7 @@
       SEO: Descriptive h1 for crawlers + screen readers.
       sr-only keeps it visually hidden without display:none (which crawlers might skip).
     -->
-    <h1 class="sr-only">David Veluz — Creative Developer &amp; Designer based in the Philippines</h1>
+    <h1 class="sr-only">David Veluz ~ Creative Developer &amp; Designer based in the Philippines</h1>
 
     <!-- 
       aria-hidden: tells assistive tech + crawlers this is decorative,
@@ -62,6 +62,7 @@ onMounted(() => {
     const topTween = gsap.to(trackTop.value, {
       xPercent: -50,
       repeat: -1,
+      yoyo: true,
       duration: 60,       // Slow, cinematic pace
       ease: "none",       // Linear for continuous marquee — easing would cause pulsing
     })
@@ -71,6 +72,7 @@ onMounted(() => {
     const bottomTween = gsap.to(trackBottom.value, {
       xPercent: 0,
       repeat: -1,
+      yoyo: true,
       duration: 45,
       ease: "none",
     })
@@ -93,14 +95,14 @@ onMounted(() => {
         gsap.to(topTween, {
           timeScale: targetTimeScale,
           duration: 0.8,
-          ease: EASE.signature,
+          ease: "power2.inOut",
           overwrite: "auto"
         })
 
         gsap.to(bottomTween, {
           timeScale: targetTimeScale,
           duration: 0.8,
-          ease: EASE.signature,
+          ease: "power2.inOut",
           overwrite: "auto"
         })
       }
@@ -125,13 +127,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* ── Motion tokens ── */
-:root {
-  --ease-signature: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
-  --ease-float: cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
 /* ── Hero ── */
 .hero {
   position: relative;
@@ -205,9 +200,7 @@ onUnmounted(() => {
 
 /* ── Text ── */
 .marquee-item {
-  font-family: 'Panchang', sans-serif;
-  font-size: clamp(4rem, 12vw, 15rem);
-  font-weight: 800;
+  font-weight: 500;
   font-style: italic;
   line-height: 0.8;
   text-transform: uppercase;
@@ -218,6 +211,18 @@ onUnmounted(() => {
   padding-right: 0.5em;
   user-select: none;
   -webkit-user-select: none;
+  font-size: clamp(4rem, 12vw, 15rem);
+}
+
+/* Row 1 — Panchang */
+.marquee-track:nth-child(1) .marquee-item {
+  font-family: var(--font-panchang);
+}
+
+/* Row 2 — Melodrama */
+.marquee-track:nth-child(2) .marquee-item {
+  font-family: var(--font-melodrama);
+  letter-spacing: 0.05em;
 }
 
 /* ── Reduced motion ── */

@@ -9,6 +9,7 @@ import { Renderer, Program, Mesh, Color, Triangle } from 'ogl'
 import type { OGLRenderingContext } from 'ogl'
 import { gsap } from 'gsap'
 import { EASE } from '~/composables/useAnimations'
+import { usePerformanceMetrics } from '~/composables/usePerformanceMetrics'
 
 const ctnDom = ref<HTMLDivElement | null>(null)
 
@@ -16,6 +17,9 @@ let animateId = 0
 let renderer: Renderer | null = null
 let gl: OGLRenderingContext | null = null
 let mesh: Mesh | null = null
+let rafClickTime = -1
+let pendingClick: { x: number, y: number } | null = null
+let lastTouchTime = 0
 
 
 // Mouse/touch tracking for ripple distortion
@@ -137,13 +141,13 @@ const frag = /* glsl */ `
 
     // Click ripple
     float rippleAge = uTime - uClickTime;
-    if (rippleAge > 0.0 && rippleAge < 2.5) {
+    if (rippleAge > 0.0 && rippleAge < 4.0) {
       vec2 clickNorm = (uClickPos * 2.0 - 1.0) * uResolution.xy / mr;
       vec2 clickDelta = uv - clickNorm;
       float clickDist = length(clickDelta);
-      float rippleRadius = rippleAge * 1.5;
+      float rippleRadius = rippleAge * 0.75;
       float rippleWidth = 0.25;
-      float rippleDecay = 1.0 - rippleAge / 2.5;
+      float rippleDecay = 1.0 - rippleAge / 4.0;
       float ripple = exp(-abs(clickDist - rippleRadius) / rippleWidth) * rippleDecay * 0.15;
       uv += normalize(clickDelta + 0.001) * ripple;
     }
@@ -207,18 +211,24 @@ function onPointerMove(x: number, y: number) {
 }
 
 function onPointerClick(x: number, y: number) {
-  mouseState.clickX = x / window.innerWidth
-  mouseState.clickY = 1.0 - y / window.innerHeight
-  mouseState.clickTime = performance.now() / 1000
+  pendingClick = {
+    x: x / window.innerWidth,
+    y: 1.0 - y / window.innerHeight,
+  }
 }
 
 function handleMouseMove(e: MouseEvent) { onPointerMove(e.clientX, e.clientY) }
-function handleMouseClick(e: MouseEvent) { onPointerClick(e.clientX, e.clientY) }
+function handleMouseClick(e: MouseEvent) {
+  // Skip if recently triggered by touch to prevent dual-fire jitter
+  if (performance.now() - lastTouchTime < 500) return
+  onPointerClick(e.clientX, e.clientY)
+}
 function handleTouchMove(e: TouchEvent) {
   const touch = e.touches[0]
   if (touch) onPointerMove(touch.clientX, touch.clientY)
 }
 function handleTouchStart(e: TouchEvent) {
+  lastTouchTime = performance.now()
   const touch = e.touches[0]
   if (touch) onPointerClick(touch.clientX, touch.clientY)
 }
@@ -230,6 +240,14 @@ function update(t: number) {
     return
   }
 
+  // Process pending click with rAF-synced timing
+  if (pendingClick) {
+    mouseState.clickX = pendingClick.x
+    mouseState.clickY = pendingClick.y
+    rafClickTime = t
+    pendingClick = null
+  }
+
   const elapsed = t * 0.005
   mesh.program.uniforms.uTime.value = elapsed
 
@@ -238,10 +256,15 @@ function update(t: number) {
   mesh.program.uniforms.uMouseVelocity.value = mouseState.velocity
   mesh.program.uniforms.uClickPos.value = [mouseState.clickX, mouseState.clickY]
 
-  if (mouseState.clickTime > 0) {
-    const realElapsed = performance.now() / 1000
-    const timeSinceClick = realElapsed - mouseState.clickTime
-    mesh.program.uniforms.uClickTime.value = elapsed - timeSinceClick
+  // Handle click ripple timing — convert rAF time to shader time only once
+  if (rafClickTime >= 0) {
+    const clickShaderTime = rafClickTime * 0.005
+    mesh.program.uniforms.uClickTime.value = clickShaderTime
+    
+    // Reset after ripple finishes (4.0s duration)
+    if (elapsed - clickShaderTime > 4.0) {
+      rafClickTime = -1
+    }
   } else {
     mesh.program.uniforms.uClickTime.value = -10.0
   }
@@ -273,8 +296,8 @@ onMounted(async () => {
       uniforms: {
         uTime: { value: 0 },
         uSpeed: { value: 1.3 },
-        uColor: { value: new Color(0.3, 0.2, 0.5) },
-        uColorBlend: { value: 0.0 },
+        uColor: { value: new Color(1.2, 0.3, 0.3) },
+        uColorBlend: { value: 0.5 },
         uResolution: { value: [window.innerWidth, window.innerHeight, window.innerWidth / window.innerHeight] },
         uTheme: { value: 0 },
         uMouse: { value: [0.5, 0.5] },
@@ -292,12 +315,20 @@ onMounted(async () => {
     resizeCanvas()
 
     window.addEventListener('resize', resizeCanvas)
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('click', handleMouseClick)
-    window.addEventListener('touchmove', handleTouchMove, { passive: true })
-    window.addEventListener('touchstart', handleTouchStart, { passive: true })
 
     animateId = requestAnimationFrame(update)
+
+    // Only enable mouse/touch move interactions on non-mobile devices
+    const { isMobile } = usePerformanceMetrics()
+    
+    if (!isMobile.value) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('touchmove', handleTouchMove, { passive: true })
+    }
+
+    // Always keep click/tap interactions for ripple effect
+    window.addEventListener('click', handleMouseClick)
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
   } catch (error) {
     console.error('[LiquidBackground] Init error:', error)
     console.error('[LiquidBackground] Error stack:', error instanceof Error ? error.stack : 'no stack')
@@ -367,8 +398,8 @@ defineExpose({
 .liquid-bg {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   overflow: hidden;
   z-index: 0;
   background-color: black;
