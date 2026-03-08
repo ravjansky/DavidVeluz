@@ -200,7 +200,6 @@ onUnmounted(() => {
 
 /* ── Text ── */
 .marquee-item {
-  font-weight: 500;
   font-style: italic;
   line-height: 0.8;
   text-transform: uppercase;
@@ -217,11 +216,13 @@ onUnmounted(() => {
 /* Row 1 — Panchang */
 .marquee-track:nth-child(1) .marquee-item {
   font-family: var(--font-panchang);
+  font-weight: 500;
 }
 
 /* Row 2 — Melodrama */
 .marquee-track:nth-child(2) .marquee-item {
   font-family: var(--font-melodrama);
+  font-weight: 700;
   letter-spacing: 0.05em;
 }
 

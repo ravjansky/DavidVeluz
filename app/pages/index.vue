@@ -4,6 +4,7 @@
     <SectionsHeroSection />
     <SectionsWhoAmISection />
     <SectionsAboutMeSection />
+    <SectionsProjectsSection />
     <SectionsSkillsSection />
     <SectionsMyProcessSection />
     <SectionsFooter />
@@ -33,12 +34,26 @@ interface SectionColorMap {
 }
 
 const sectionColors: SectionColorMap[] = [
-  { selector: '.hero',     color: [1.2, 0.3, 0.3],    duration: 1, blend: 0.5 },
-  { selector: '.who-am-i', color: [-1.2, 0.6, 1.8],   duration: 1, blend: 0.3 },
-  { selector: '.about-me', color: [-1.2, 0.6, 1.8],   duration: 1, blend: 0.5 },
-  { selector: '.skills',   color: [5.0, 0.0, 0.0],    duration: 1, blend: 0.5 },
-  { selector: '.process',  color: [-1.1, -1.1, -1.1],  duration: 1, blend: 0.5 },
-  { selector: '.footer',   color: [-1.1, -1.1, 1.1],   duration: 1, blend: 0.5 },
+  // 1. Deepened Hero Pink (Establishes the bold brand entry)
+  { selector: '.hero',     color: [0.9, 0.2, 0.2],    duration: 1, blend: 0.6 },
+
+  // 2. Rich Corporate Blue (Hard cut to professional, clear tech blue)
+  { selector: '.who-am-i', color: [0.05, 0.25, 0.7],  duration: 1, blend: 0.65 },
+
+  // 3. Deep Royal Violet (A heavy, dark purple. Authoritative and grounded)
+  { selector: '.about-me', color: [0.25, 0.05, 0.45], duration: 1, blend: 0.7 },
+
+  // 4. Deep Emerald (High contrast shift to keep the eye engaged)
+  { selector: '.skills',   color: [0.05, 0.35, 0.25], duration: 1, blend: 0.65 },
+
+  // 5. Dark Sapphire (Cooling it back down into the blue spectrum)
+  { selector: '.projects', color: [0.1, 0.15, 0.5],   duration: 1, blend: 0.7 },
+
+  // 6. Burnished Gold / Dark Orange (Rich, heavy amber for the process breakdown)
+  { selector: '.process',  color: [0.65, 0.3, 0.02],  duration: 1, blend: 0.75 },
+
+  // 7. Midnight Blue (Almost black, but keeps the corporate undertone to finish)
+  { selector: '.footer',   color: [0.02, 0.04, 0.08], duration: 1, blend: 0.8 },
 ]
 
 onMounted(() => {

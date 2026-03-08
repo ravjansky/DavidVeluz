@@ -11,18 +11,11 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
-        // FontShare — Panchang & Satoshi
+        // FontShare — Panchang, Satoshi & Melodrama
         { rel: 'preconnect', href: 'https://api.fontshare.com', crossorigin: '' },
         {
           rel: 'stylesheet',
-          href: 'https://api.fontshare.com/v2/css?f[]=panchang@200,500,700,800&f[]=satoshi@300,400,500,700&display=swap',
-        },
-        // Google Fonts — Climate Crisis
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap',
+          href: 'https://api.fontshare.com/v2/css?f[]=panchang@200,500,700,800&f[]=satoshi@300,400,500,700&f[]=melodrama@400,500,600,700&display=swap',
         },
       ],
     },
