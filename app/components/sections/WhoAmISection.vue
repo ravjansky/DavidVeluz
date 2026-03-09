@@ -87,15 +87,15 @@ const entryDirection = ref<'forward' | 'reverse'>('forward')
 const isForward = computed(() => entryDirection.value === 'forward')
 
 // ─── Color systems ───
-// Forward: warm pink (hero handoff) → corporate blue
+// Forward: hero pink → blue
 const FWD_FROM  = [0.9, 0.2, 0.2] as const
 const FWD_TO    = [0.05, 0.25, 0.7] as const
 const FWD_BLEND = [0.6, 0.65] as const  // [from, to]
 
-// Reverse: teal (entered from below) → warm amber (exiting up)
-const REV_FROM  = [0.15, 0.45, 0.5] as const   // at progress=1
-const REV_TO    = [0.6, 0.3, 0.12] as const     // at progress=0
-const REV_BLEND = [0.55, 0.6] as const
+// Reverse: blue (at progress=1) → hero pink (at progress=0)
+const REV_FROM  = [0.05, 0.25, 0.7] as const
+const REV_TO    = [0.9, 0.2, 0.2] as const
+const REV_BLEND = [0.65, 0.6] as const
 
 /*
   Color dead zone threshold.
@@ -105,7 +105,7 @@ const REV_BLEND = [0.55, 0.6] as const
   the mask opened. Now we hold the hero's color until the mask has
   visibly opened (~3% progress). This makes the pin feel seamless.
 */
-const COLOR_START_THRESHOLD = 0.03
+const COLOR_START_THRESHOLD = 0.10
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t
@@ -116,9 +116,7 @@ const diveInOpacity = computed(() => Math.max(0, 1 - progress.value * 3))
 const diveInScale = computed(() => 1 + progress.value * 0.12)
 
 const ctaTextShadow = computed(() =>
-  isForward.value
-    ? '0 0 60px rgba(40, 120, 255, 0.3)'
-    : '0 0 60px rgba(255, 165, 60, 0.3)',
+  '0 0 60px rgba(40, 120, 255, 0.3)',
 )
 
 const radius = computed(() => progress.value * 58)
@@ -148,18 +146,14 @@ const revealMask = computed(() => {
   )`
 })
 
-// Glow ring — direction-aware color
+// Glow ring — always blue
 const glowGradient = computed(() => {
   const r = radius.value
 
-  const glowColor = isForward.value
-    ? { main: 'rgba(40, 120, 255, 0.35)', fade: 'rgba(30, 80, 200, 0.10)' }
-    : { main: 'rgba(255, 165, 60, 0.35)', fade: 'rgba(200, 120, 30, 0.10)' }
-
   return `radial-gradient(circle at 50% 50%,
     transparent ${Math.max(0, r - 1.5)}%,
-    ${glowColor.main} ${r + 0.5}%,
-    ${glowColor.fade} ${r + 4.0}%,
+    rgba(40, 120, 255, 0.35) ${r + 0.5}%,
+    rgba(30, 80, 200, 0.10) ${r + 4.0}%,
     transparent ${r + 8.0}%
   )`
 })

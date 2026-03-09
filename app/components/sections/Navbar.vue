@@ -1,6 +1,20 @@
 <template>
   <nav ref="navRef" class="navbar">
-    <div class="navbar__logo">DV</div>
+    <div class="navbar__logo">
+      <svg class="navbar__logo-svg" viewBox="0 0 1400 150" xmlns="http://www.w3.org/2000/svg" aria-label="DV">
+        <defs>
+          <linearGradient id="nav-dv-grad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#a70000" />
+            <stop offset="100%" stop-color="#ff5252" />
+          </linearGradient>
+        </defs>
+        <text
+          x="700" y="80"
+          fill="url(#nav-dv-grad)"
+          style="font-family:'Panchang',sans-serif;font-size:110px;font-weight:700;text-anchor:middle;dominant-baseline:middle;letter-spacing:-.05em"
+        >DV</text>
+      </svg>
+    </div>
     <ul class="navbar__links">
       <li><NuxtLink to="/">Home</NuxtLink></li>
       <li><NuxtLink to="/showcase">Showcase</NuxtLink></li>
@@ -45,10 +59,13 @@ onMounted(() => {
 }
 
 .navbar__logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  font-family: var(--font-panchang, sans-serif);
+  display: flex;
+  align-items: center;
+}
+
+.navbar__logo-svg {
+  width: 3rem;
+  height: auto;
 }
 
 .navbar__links {

@@ -296,8 +296,8 @@ onMounted(async () => {
       uniforms: {
         uTime: { value: 0 },
         uSpeed: { value: 1.3 },
-        uColor: { value: new Color(1.2, 0.3, 0.3) },
-        uColorBlend: { value: 0.5 },
+        uColor: { value: new Color(0.9, 0.2, 0.2) },
+        uColorBlend: { value: 0.6 },
         uResolution: { value: [window.innerWidth, window.innerHeight, window.innerWidth / window.innerHeight] },
         uTheme: { value: 0 },
         uMouse: { value: [0.5, 0.5] },

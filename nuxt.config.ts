@@ -10,6 +10,9 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      style: [
+        { children: 'body { visibility: hidden; }' },
+      ],
       link: [
         // FontShare — Panchang, Satoshi & Melodrama
         { rel: 'preconnect', href: 'https://api.fontshare.com', crossorigin: '' },
