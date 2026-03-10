@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, provide, readonly, nextTick } from 'vue'
+import { ref, provide, readonly, nextTick } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -32,9 +32,7 @@ function onLoaderDismissed() {
 
 provide('isAppReady', readonly(isAppReady))
 
-// ─── Page transition guards ───
 router.beforeEach(async (to, from) => {
-  // Skip transition during intro loader or same-page navigation
   if (!isAppReady.value) return true
   if (from.name === to.name) return true
 
@@ -48,25 +46,6 @@ router.afterEach(async () => {
   await nextTick()
   await pageTransitionRef.value?.playLeave()
 
-  // Refresh ScrollTrigger positions after page transition
   ScrollTrigger.refresh()
-})
-
-onMounted(() => {
-  // Reveal body — FOUC fix (body starts hidden via nuxt.config head style)
-  document.body.style.visibility = 'visible'
-
-  // Check for return visitor — skip loader immediately
-  let hasVisited = false
-  try {
-    hasVisited = localStorage.getItem('dv_visited') === 'true'
-  } catch (e) {
-    console.error('LocalStorage error:', e)
-  }
-
-  if (hasVisited) {
-    showLoader.value = false
-    isAppReady.value = true
-  }
 })
 </script>

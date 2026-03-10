@@ -8,11 +8,7 @@
             <stop offset="100%" stop-color="#ff5252" />
           </linearGradient>
         </defs>
-        <text
-          x="700" y="80"
-          fill="url(#nav-dv-grad)"
-          style="font-family:'Panchang',sans-serif;font-size:110px;font-weight:700;text-anchor:middle;dominant-baseline:middle;letter-spacing:-.05em"
-        >DV</text>
+        <text x="700" y="80" fill="url(#nav-dv-grad)" style="font-family:'Panchang',sans-serif;font-size:110px;font-weight:700;text-anchor:middle;dominant-baseline:middle;letter-spacing:-.05em">    DV  </text>
       </svg>
     </div>
     <ul class="navbar__links">
@@ -31,8 +27,6 @@ const navRef = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   if (!navRef.value) return
-
-  // Respect reduced motion
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   gsap.from(navRef.value, {
@@ -64,7 +58,7 @@ onMounted(() => {
 }
 
 .navbar__logo-svg {
-  width: 3rem;
+  width: 100%;
   height: auto;
 }
 

@@ -40,12 +40,12 @@ const PAGE_NAMES: Record<string, string> = {
   showcase: 'Showcase',
 }
 
-// Only enable transitions after the intro loader has been dismissed
+// Replace the watch block in the script setup with this:
 watch(() => props.isAppReady, (ready) => {
   if (ready) {
     nextTick(() => { hasCompletedFirstLoad.value = true })
   }
-})
+}, { immediate: true })
 
 async function playEnter(pageName: string): Promise<void> {
   if (!hasCompletedFirstLoad.value) return

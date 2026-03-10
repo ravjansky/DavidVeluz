@@ -143,8 +143,8 @@ let initialized = false
 
 const VELOCITY_THRESHOLD = 0.15
 const FADE_SPEED = 0.012
-let strokeAlpha = 0.2
-const BASE_ALPHA = 0.2
+let strokeAlpha = 0.8
+const BASE_ALPHA = 0.8
 let isSettled = false
 let isFading = false
 
@@ -205,7 +205,7 @@ function render(): void {
   }
 
   ctx.strokeStyle = `hsla(${Math.round(wave.update())},50%,50%,${strokeAlpha})`
-  ctx.lineWidth = 1
+  ctx.lineWidth = 2
 
   ctx.beginPath()
   for (const line of lines) {
