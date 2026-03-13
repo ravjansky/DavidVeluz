@@ -4,11 +4,24 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
 
+  ssr: false,
+
+  nitro: {
+    // This helps Nitro handle the WASM imports correctly for Cloudflare
+    experimental: {
+      wasm: true
+    }
+  },
+
   css: ['~/assets/css/main.css'],
 
   compatibilityDate: '2025-07-15',
 
   app: {
+    pageTransition: {
+      name: 'page',
+      mode: 'out-in',
+    },
     head: {
       link: [
         // FontShare — Panchang, Satoshi & Melodrama
